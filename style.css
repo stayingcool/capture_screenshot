@@ -1,0 +1,12 @@
+img {
+  width: 75vw;
+  transform: translateX(50%);
+  opacity: 0;
+  transition: all 500ms;
+}
+
+.fade {
+  transform: translateX(0);
+  opacity: 1;
+  transition: all 500ms;
+}
