@@ -3,6 +3,12 @@ img {
   transform: translateX(50%);
   opacity: 0;
   transition: all 500ms;
+  border: solid 7px #41403e;
+  display: inline-block;
+  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px;
+  padding: 1em;
+  line-height: 1.5em;
+  background: #f0f0d8;
 }
 
 .fade {
