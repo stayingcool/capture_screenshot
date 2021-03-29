@@ -5,7 +5,11 @@ var express = require("express"),
   https = require("https"),
   fs = require("fs");
 
+const basicAuth = require("express-basic-auth");
 const port = 8085;
+const getSecret = () => {
+  return "supersecret123";
+};
 
 var app = express();
 var options = {
@@ -13,6 +17,14 @@ var options = {
   cert: fs.readFileSync("../../server.cert"),
   index: "index.html",
 };
+
+app.use(
+  basicAuth({
+    users: { admin: getSecret() },
+    challenge: true,
+    realm: "Imb4T3st4pp", // TBD - What is this?
+  })
+);
 
 app.use("/", express.static("../../frontend/", options));
 
