@@ -1,26 +1,33 @@
-var express = require("express");
-var fs = require("fs");
-var app = express();
-var cors = require("cors");
+"use strict";
 
+var express = require("express"),
+  cors = require("cors"),
+  https = require("https"),
+  fs = require("fs");
+
+const port = 8085;
+
+var app = express();
 var options = {
+  key: fs.readFileSync("../../server.key"),
+  cert: fs.readFileSync("../../server.cert"),
   index: "index.html",
 };
 
-app.get("/images", cors(), function (req, res) {
-  let images = fs
-    .readdirSync("../../frontend/img", { withFileTypes: true })
-    .filter((item) => !item.isDirectory())
-    .map((item) => `img/${item.name}`);
-
-  res.send(images);
-});
-
 app.use("/", express.static("../../frontend/", options));
 
-var server = app.listen(8085, "0.0.0.0", function () {
-  var host = server.address().address;
-  var port = server.address().port;
+app.get("/images", cors(), function (req, res) {
+  let fileNames = fs
+    .readdirSync("../../frontend/img", { withFileTypes: true })
+    .filter((item) => !item.isDirectory())
+    .filter((item) => item.name.endsWith(".png"))
+    .map((item) => `img/${item.name}`);
 
-  console.log("my app is listening at http://%s:%s", host, port);
+  let imageList = fileNames.sort((a, b) => (a > b ? -1 : 1));
+
+  res.send(imageList);
+});
+
+https.createServer(options, app).listen(port, "0.0.0.0", function () {
+  console.log("Server listening on port " + port);
 });
