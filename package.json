@@ -5,6 +5,7 @@
   "main": "index.js",
   "dependencies": {
     "axios": "^0.21.1",
+    "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-basic-auth": "^1.2.0",
@@ -14,7 +15,8 @@
     "parcel-bundler": "^1.12.5"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "password": "node -e \"const bcrypt = require('bcrypt'); const password = Array(25).fill('+-_!?,.0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz').map((x) => x[Math.floor(Math.random() * x.length)]).join(''); const hash = bcrypt.hashSync(password, 13); console.log({password, hash});\""
   },
   "author": "",
   "license": "ISC"

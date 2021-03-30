@@ -4,38 +4,50 @@ var express = require("express"),
   cors = require("cors"),
   https = require("https"),
   fs = require("fs");
-
-const basicAuth = require("express-basic-auth");
-const port = 8085;
-const getSecret = () => {
-  return "supersecret123";
-};
-
 var app = express();
-var options = {
+
+const bcrypt = require("bcrypt");
+const basicAuth = require("express-basic-auth");
+
+const port = 8085;
+const options = {
   key: fs.readFileSync("../../server.key"),
   cert: fs.readFileSync("../../server.cert"),
   index: "index.html",
 };
 
+const USER_HASH = {
+  admin: "$2b$13$54Lw20MoIk2ghuXu2/lKcOw2AtTo8t.hJhIq6rhe5j6.pa68iSQpu",
+};
+
 app.use(
   basicAuth({
-    users: { admin: getSecret() },
+    authorizeAsync: true,
     challenge: true,
-    realm: "Imb4T3st4pp", // TBD - What is this?
+    authorizer: async (username, password, authorize) => {
+      const passwordHash = USER_HASH[username];
+      try {
+        const passwordMatches = await bcrypt.compare(password, passwordHash);
+        console.log("passwordMatches: " + passwordMatches);
+        return authorize(null, passwordMatches);
+      } catch (error) {
+        debugger;
+        console.log(error);
+      }
+    },
   })
 );
 
 app.use("/", express.static("../../frontend/", options));
 
 app.get("/images", cors(), function (req, res) {
-  let fileNames = fs
+  const fileNames = fs
     .readdirSync("../../frontend/img", { withFileTypes: true })
     .filter((item) => !item.isDirectory())
     .filter((item) => item.name.endsWith(".png"))
     .map((item) => `img/${item.name}`);
 
-  let imageList = fileNames.sort((a, b) => (a > b ? -1 : 1));
+  const imageList = fileNames.sort((a, b) => (a > b ? -1 : 1));
 
   res.send(imageList);
 });

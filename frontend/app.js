@@ -9,7 +9,7 @@ function createImageNode(fileName) {
 }
 
 const getImages = async () => {
-  let response = await fetch("http://localhost:8085/images");
+  let response = await fetch("https://localhost:8085/images");
   let images = await response.json();
   return images;
 };
