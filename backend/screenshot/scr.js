@@ -21,7 +21,7 @@ const getDate = () => {
 };
 
 const takeScreenShot = () => {
-  let filename = `${getDate()}.png`;
+  let filename = `${getDate()}.sht`;
   screenshot({ filename: `../../frontend/img/${filename}` })
     .then((res) => {})
     .catch((err) => {

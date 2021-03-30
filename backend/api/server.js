@@ -44,7 +44,7 @@ app.get("/images", cors(), function (req, res) {
   const fileNames = fs
     .readdirSync("../../frontend/img", { withFileTypes: true })
     .filter((item) => !item.isDirectory())
-    .filter((item) => item.name.endsWith(".png"))
+    .filter((item) => item.name.endsWith(".sht"))
     .map((item) => `img/${item.name}`);
 
   const imageList = fileNames.sort((a, b) => (a > b ? -1 : 1));
