@@ -1,11 +1,14 @@
 "use strict";
 
+const utils = require("../utils/util");
 var express = require("express"),
   cors = require("cors"),
   https = require("https"),
   fs = require("fs"),
   path = require("path");
 var app = express();
+var sqlite3 = require("sqlite3").verbose();
+var db = new sqlite3.Database("mdb");
 
 const bcrypt = require("bcrypt");
 const basicAuth = require("express-basic-auth");
@@ -35,7 +38,6 @@ app.use(
       const passwordHash = USER_HASH[username];
       try {
         const passwordMatches = await bcrypt.compare(password, passwordHash);
-        console.log("passwordMatches: " + passwordMatches);
         return authorize(null, passwordMatches);
       } catch (error) {
         debugger;
@@ -46,6 +48,7 @@ app.use(
 );
 
 app.use("/", express.static("../../frontend/", options));
+app.use(express.json({ limit: "50mb" }));
 
 app.get("/images", cors(), function (req, res) {
   const fileNames = fs
@@ -57,6 +60,43 @@ app.get("/images", cors(), function (req, res) {
   const imageList = fileNames.sort((a, b) => (a > b ? -1 : 1));
 
   res.send(imageList);
+});
+
+app.get("/items/today", cors(), function (req, res) {
+  var data = {
+    start: req.query.start,
+    end: req.query.end,
+  };
+
+  let start = utils.getToday();
+  let end = utils.getTomorrow();
+  if (data && data.start && data.end) {
+    start = data.start;
+    end = data.end;
+  }
+
+  db.all(
+    "SELECT key FROM items where key > ? and key < ? ORDER by key DESC",
+    [start, end],
+
+    function (err, rows) {
+      if (err) {
+        res.status(400).json({ error: err.message });
+        return;
+      }
+      let images = [];
+      if (rows) {
+        let keys = rows.map((row) => images.push(row.key));
+      }
+      rows
+        ? res.status(200).json({
+            status: "ok",
+            message: `Found ${rows.length} records`,
+            images: images,
+          })
+        : res.send({ status: "ok", message: "No record founds!" });
+    }
+  );
 });
 
 app.get("/env", cors(), function (req, res) {
@@ -72,6 +112,60 @@ app.get("/env", cors(), function (req, res) {
   });
 });
 
+app.get("/data", cors(), function (req, res) {
+  db.run(
+    "UPDATE counts SET value = value + 1 WHERE key = ?",
+    "counter",
+    function (err, row) {
+      db.get(
+        "SELECT value FROM items where key = ?",
+        "one",
+        function (err, row) {
+          res.send(row.value);
+        }
+      );
+    }
+  );
+});
+
+app.get("/items/:key", cors(), function (req, res) {
+  db.get(
+    "SELECT value FROM items where key = ?",
+    [req.params.key],
+    function (err, row) {
+      if (err) {
+        res.status(400).json({ error: err.message });
+        return;
+      }
+      row && row.value
+        ? res.send(row.value)
+        : res.send({ status: "ok", message: "No record found!" });
+    }
+  );
+});
+
+app.post("/item/", (req, res, next) => {
+  let params = [req.body.value];
+  let sql =
+    "INSERT INTO items (key, value) VALUES (datetime('now','localtime'),?)";
+
+  db.run(sql, params, function (err, result) {
+    if (err) {
+      res.status(400).json({ error: err.message });
+      return;
+    }
+    res.json({
+      message: "success",
+      lastID: this.lastID,
+    });
+  });
+});
+
 https.createServer(options, app).listen(PORT, "0.0.0.0", function () {
   console.log("Server listening on port " + PORT);
+  db.serialize(function () {
+    db.run(
+      "CREATE TABLE IF NOT EXISTS items (key DATETIME, value BLOB, PRIMARY KEY(key))"
+    );
+  });
 });

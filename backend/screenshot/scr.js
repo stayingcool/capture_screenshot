@@ -1,7 +1,9 @@
 "use strict";
 
+const axios = require("axios").default;
+const https = require("https");
 const screenshot = require("screenshot-desktop");
-const TIME_INTERVAL = 1000 * 60; // Every 1 minute
+const TIME_INTERVAL = 1000 * 15; // Every 1 minute
 
 const getDate = () => {
   let today = new Date();
@@ -21,12 +23,34 @@ const getDate = () => {
 };
 
 const takeScreenShot = () => {
-  let filename = `${getDate()}.sht`;
-  screenshot({ filename: `../../frontend/img/${filename}` })
-    .then((res) => {})
-    .catch((err) => {
-      console.log(err);
+  screenshot({ format: "png" }).then(async (res) => {
+    let base64data = Buffer.from(res).toString("base64");
+
+    let data = JSON.stringify({
+      value: `data:image/png;base64,${base64data}`,
     });
+
+    let config = {
+      method: "post",
+      url: "https://localhost:8085/item/",
+      headers: {
+        Authorization: "Basic YWRtaW46YVFlLlMtKzg3THNvSEFsK3VLN3chaGdUSw==",
+        "Content-Type": "application/json",
+      },
+      httpsAgent: new https.Agent({
+        rejectUnauthorized: false,
+      }),
+      data: data,
+    };
+
+    axios(config)
+      .then(function (response) {
+        console.log(JSON.stringify(response.data));
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
+  });
 };
 
 // Main

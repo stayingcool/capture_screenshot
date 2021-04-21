@@ -9,7 +9,8 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-basic-auth": "^1.2.0",
-    "screenshot-desktop": "^1.12.3"
+    "screenshot-desktop": "^1.12.3",
+    "sqlite3": "^5.0.2"
   },
   "devDependencies": {
     "parcel-bundler": "^1.12.5"
